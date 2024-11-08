@@ -1090,14 +1090,14 @@ OBS: Lembre-se de subir o conteiner do front-end toda vez que for testar a API, 
 
 Tendo em vista todos os processos feitos para a implementação desta API como criação, validações, permissões, buscas, filtros e documentação, a próxima etapa do desenvolvimento da API será a etapa de deploy. 
 
-A etapa de deploy consiste basicamente em colocar a aplicação no ar, para que seja executada em outros locais além da sua própria máquina, disponibilizando a aplicação para uso, seja de um ambiente de desenvolvimento, teste ou produção. 
+A etapa de deploy consiste basicamente em colocar a aplicação no ar, para que seja executada em outros locais além da sua própria máquina, disponibilizando a aplicação para uso, seja de um ambiente de desenvolvimento, teste ou produção. Nesse sentido, tal etapa faz se necessária justamente por que os usuários finais da aplicação: os clientes, não conseguiriam acessar a aplicação pelo fato dela estar disponível apenas em local host. 
 
-Esta etapa é importante para o desenvolvimento de qualquer aplicação pois serve como uma simulação de como era se comportaria na prática. É apartir dela que é possível diagnosticar o status da aplicação para saber quais são os seus erros e, apartir disso, planejar as proximas manutenções do sistema, tal como a implementação de novas features. 
+Esta etapa é importante para o desenvolvimento de qualquer aplicação pois serve como uma simulação de como ela se comportaria na prática. É a partir dela que é possível diagnosticar o status da aplicação para saber quais são os seus erros e, dessa forma, planejar as proximas manutenções do sistema, tal como a implementação de novas features. 
 
 ### Preparando o ambiente
 Para este projeto, a etapa de deploy será implementada na AWS (Amazon Web Services) com o intuito de automatizar a implantação do projeto no serviço de computação em nuvem de lá, aproveitando a escalabilidade e a confiabilidade da infraestrutura de nuvem da Amazon.
 
-Primeiramente, é necessário configurar e preparar a API para o processo de deploy.
+Primeiramente, é necessário configurar e preparar a API para o processo de deploy, 
 
 1) Coloque o projeto construído em um repositório do github (como esse, por exemplo)
 2) Dentro do repositório, crie uma nova branch para o deploy
@@ -1105,12 +1105,95 @@ Primeiramente, é necessário configurar e preparar a API para o processo de dep
 ~~~
 ALLOWED_HOSTS = ['*']
 ~~~
-Isso irá fazer com que todos os hosts (servidores) sejam permitidos para o projeto, autorizando o uso da aplicação construida em um desses serviços de computação.  
+Isso irá fazer com que todos os hosts (servidores) sejam permitidos para o projeto, autorizando o uso da aplicação em um desses serviços de computação. 
 
 ### Configurando projeto e criando uma instância AWS 
 
+Agora na AWS, será necessário criar um ambiente de produção para a API.
+
+Especificamente para este projeto, será utilizado o Amazon EC2 para hospedar a API, o qual é um serviço que fornece capacidade de computação redimensionável na nuvem da Amazon
+
+Dentro da AWS:
+
+> ECS > executar/criar instâncias
+> AMI (imagem de máquina da amazon) escolhida foi ubuntu
+> serviço de instância utilizada: ts.micro
+> ATENÇÃO: baixe e guarde os pares de chave para se logar na instância
+
+No final, a instância estará criada com o status de "executando"
+
 ### Fazendo deploy na AWS 
 
-### Populando banco e trabalhando em segundo plano 
+1) Acesse a instância criada pelo id 
+2) Conecte-se com a máquina virtual 
+3) Dentro do terminal da máquina (vai depender do sistema operacional que você optou):
+    - Atualize o terminal 
+    > sudo apt update
+    - Verifique a versão do python 
+    > python3 --version
+    - Copie o endereço do seu repositório e faça um git clone na máquina virtual
+    > git clone "link do repositório"
+    Obs: lembre-se de gerar um token para utilizá-lo como autenticação na máquina virtual
+    - Verifique a branch atual e mude para a branch de deploy 
+    > git branch 
+    > git checkout deploy
+
+4) Instale, crie e ative um ambiente virtual na máquina virtual
+
+Dentro do repositório clonado, instale o ambiente virtual
+> sudo apt install python3.12-venv
+
+Crie o ambiente virutal
+> python3 -m venv venv
+
+Ative o ambiente virtual criado 
+> source venv/bin/activate
+
+Obs: Uma vez criado o ambiente virtual, só precisará ativá-lo na próxima vez.
+
+5) Dentro do ambiente virtual, instale as dependências do projeto, faça as migrações, crie um superusuário 
+> pip install -r requirements.txt
+> python manage.py makemigrations
+> python manage.py migrate 
+> python manage.py createsuperuser
+
+Obs: caso não consiga instalar corretamente de primeira, tente primeiramente instalar este kit de ferramentas:
+
+> pip install setuptools
+
+6) Configure a porta 
+
+Diferentemente do que estava sendo aplicado no ambiente de desenvolvimento com localhost, agora será necessário definir uma porta para subir o servidor. A configuração desta porta será feita manualmente na AWS em: Instância > Segurança > Grupos de Segurança > Regras de entrada (editar regras de entrada).
+
+Adicione uma nova regra: TCP personalizada, intervalo de portas 8000, bloco CIDR 0.0.0.0/0
+
+7) Suba o servidor
+
+> python manage.py runserver (porta adicionada: 0.0.0.0:8000)
+
+Para conferir se está funcionando, em outra aba, coloque na URL:
+> (Ip público):8000
+
+8) Popule o banco de dados (opcional)
+
+Caso os dados do banco de dados não seja importado para a máquina virtual, popule novamente os bancos de dados com: 
+
+> python3 popular_banco_cursos.py
+> python3 popular_banco_estudantes.py
+
+### Trabalhando em segundo plano 
+
+Da forma como a instância está sendo utilizida, ela está fazendo a mesma coisa que a máquina local faria: rodar a aplicação de forma local. Ou seja, se a instância criada for fechada, a aplicação é fechada também. Desta forma, faz-se necessário configurar o servidor para que a instância criada consiga operar em segundo plano em:  id da instâncias > conectar instânicas. Dentro da máquina virtual:
+
+1) Verifique as aplicações que estão rodando em segundo plano
+> screen -list
+2) Determine que a aplicação rodando está em segundo plano 
+> screen -S (nome da pasta, nesse caso, a mesma clonada do git)
+
+Caso queira confirmar, utilize o comando do passo 1 para verificar se a aplicação está na lista de screen. Além disso, logo após subir o servidor da API, independentemente da aba da instância estiver aberta ou fechada, a API continuará ativa. 
+
+- Parando instâncias 
+
+É possível parar a execução das instâncias, podendo interromper ou encerrar. Isso é importante pois como a instância que está sendo aplicada para a hospedagem do projeto é paga, é preciso ficar de olho no tempo em que a instância está sendo executada. Sendo necessário interromper o processo quando não estiver utilizando para evitar a vinda gastos não planejados.
 
 ### Escolhendo a melhor prática de  deploy
