@@ -1196,4 +1196,91 @@ Caso queira confirmar, utilize o comando do passo 1 para verificar se a aplicaç
 
 É possível parar a execução das instâncias, podendo interromper ou encerrar. Isso é importante pois como a instância que está sendo aplicada para a hospedagem do projeto é paga, é preciso ficar de olho no tempo em que a instância está sendo executada. Sendo necessário interromper o processo quando não estiver utilizando para evitar a vinda gastos não planejados.
 
-### Escolhendo a melhor prática de  deploy
+# Trabalhando com testes unitários e de integração 
+
+Os testes unitários e de integração são dois tipos de níveis de teste diferentes mas ambos compartilham um mesmo objetivo final: garantir com que o projeto que está sendo testado atenda todas as necessidades do utilizador final. Ou seja, quanto mais abrangentes e diversificados forem o conjunto de testes utilizados, maior será a qualidade, eficiência e confiabilidade do produto a ser entregue. 
+
+Existem vários níveis de testes como de aceitação do usuário, regressão, desempenho, segurança, etc. Para este projeto, serão aplicados apenas alguns testes unitários e de integração. 
+
+## Conhecendo os tipos de testes
+
+- Testes unitários
+
+São basicamente pequenos trechos de códigos ou scripts escritos individuais para verificar a confiabilidade de alguma parte específica de código do projeto como uma função ou um método. Isso serve para verificar se aquele trecho do código fonte está se comportando como deveria ou não.  
+
+Estes tipos de testes são projetados para isolar e testar um unidade de código de maneira independente ao resto do projeto. Geralmente eles são responsáveis por identificar error e bugs de locais específicos a fim de evitar que tal erro escalone mais ainda para o resto da aplicação. Sendo considerados mais rápidos de desenvolver e executar, com um custo de produção menor. 
+
+- Testes de integração 
+
+Uma vez que temos partes específicas do código verificadas por meio de testes unitários, faz-se necessária a utilização de testes de integração para verificar se à algum erro na conexão entre os trechos de códigos verificados. 
+
+Nesse sentido, estes tipos de testes tem como objetivo identificar e solucionar problemas de interface e interoperabilidade tal como realizar o compartilhamento correto de dados entre os componentes.
+
+- End to end (de ponta à ponta)
+
+Testes que verificam o fluxo do sistema por completo, simulando os resultados finais. São os testes mais próximos de ambiente de produção, simulando tal ambiente. Por se um teste mais avançado e que possui um sistema praticamente pronto, ele é um teste que apresenta um custo mais elevado, com um tempo maior para desenvolve-lo.
+
+Dessa forma, é possível interder os tipos de testes em diferentes níveis, como se fosse uma pirâmide onde a base são os testes unitários, os quais servem como base para os testes de integração, que por sua vez, são como base para os testes "end to end".
+
+![piramide_de_testes](/readme_assets/piramide_de_testes.jpg)
+
+Note que, quanto mais próximo o tipo de teste se aproxima do topo, mais caro e mais complexo ele se torna. Tal como a quantidade de testes, que se relaciona de forma inversa à piramide.
+
+### Tipos de testes
+
+- Testes manuais
+
+São testes os quais são executados por quem está planejando o projeto de forma manualmente. Ou seja, são testes impostos pelos programadores onde eles se põe em uma situação específica para caso o usuário digite um dado errado do formulário.
+
+Podemos citar como exemplo de teste manual o teste de verificação do cpf. Para realmente testar esse campo do formulário atualmente, o programador propositalmente preenche o campo de forma errada para conferir de forma manual se a aplicação irá detectar o erro ou não. 
+
+Contudo, além deste trabalho ser bastante massante e repetitivo, pelo fato do ser humano ser limitado por natureza, é inevitável a presença de falhas e bugs nestes testes.  Pois estes testes deverão ser verificados e conferidos todas as vezes em que forem executados. 
+
+- Testes automatizados
+
+Testes feitos pela máquina. Basicamente, são testes feitos por softwares os quais possuem scripts pré-determinados os quais nos permitem indicar os cenários de testes que devem ser realizados. Pelo fato de ser um script "pronto", você pode aplicá-lo várias vezes para testar vários cenários com mais eficiência e velocidade do que a forma manual. 
+
+### Testando a API no ThunderClient
+
+O ThunderClient é uma extensão do vscode a qual será utilizada para testar a API REST do projeto. Ela irá, especificamente, para testar as requisições. Foi utilizado nesse projeto para ter uma melhor visão de como uma única requisição recebe vários testes e como cada um deles se relacionam. 
+
+Para titulo de exemplo, foi utilizada a requisição GET da rota de estudantes: 
+> http://127.0.0.1:8000/estudantes/
+
+Quando a requisição GET for checada após ser enviada, ela terá como status code: "401 Unauthorized". Isso poderá ser solicionado indo para a aba de testes, selecionando um novo teste do tipo "code response" igual ao 401, que é o código do status. Ao enviar novamente a requisição, bastou apenas conferir na aba de resultados de testes de que o resultado passou e estava ok. 
+
+- Testando se o código de resposta está correto
+
+A questão é que no cenário em que esta requisição está sendo testada, a API precisa ser autenticada. Logo, faz-se necessário realizar a autenticação de um super usuário por exemplo. Consequentemente, o status irá se alterar para "200 ok", fazendo com que o teste seja alterado de "401" para "200".
+
+- Testando se o corpo da resposta é Json 
+
+Para implementar este teste basta apenas adicionar um novo teste com "responsebody isjson"
+
+- Testando o tipo de conteúdo da resposta 
+
+De forma paralela aos demais: "conten-type equal application/json"
+
+- Testes e scripts 
+
+Os testes que serão implementados no cenário que foi montado devem englobar não só aqueles que dão certo, mas também aqueles que dão erro. Dessa forma, aquele "responsecode equal 401" deveria também ser implementado. Note que, dependendo da condição: o usuário está autenticado ou não, o status receberar um resultado diferente, sendo hora 401, hora 200.
+
+Dessa forma, faz-se necessária a implementação de scripts de testes para melhor organizar a forma como é testada a requisição GET dos estudantes. Contudo, de acordo com a documentação do thunderclient, a linguagem utilizada para escrever esses scripts é javascript.
+
+Nesse sentido, por motivo do foco do projeto ser relacionado à linguagem python, os testes serão desenvolvidos em outro local sem ser o ThunderClient.
+
+- Boa prática: Pasta "tests"
+
+A fim de criar vários cenários de testes para várias possibilidades, torna-se mais viável criar uma nova pasta dentro da aplicação. É nela onde os arquivos de script para teste serão desenvolvidos. 
+
+1) Crie uma pasta "tests" dentro do app a ser testado (nesse caso aqui: escola)
+2) Dentro da pasta, informe à pasta que ela é um módulo do python criando um arquivo "__ init_ _.py" 
+3) Para evitar futuros conflitos, dele o arquivo tests.py 
+
+## Testes de model e serializer
+
+## Testes de autenticação 
+
+## Testes de requisição 
+
+## Trabalhando com Fixtures 
