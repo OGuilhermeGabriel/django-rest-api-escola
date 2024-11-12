@@ -1279,6 +1279,115 @@ A fim de criar vários cenários de testes para várias possibilidades, torna-se
 
 ## Testes de model e serializer
 
+### Trabalhando com teste unitário em Django
+
+- Exemplificando um teste qualquer 
+
+1) Crie um novo arquivo na pastas "tests", chamado "test_models.py", feito para os testes para as models do projeto. 
+2) Importe a biblioteca de testes do django e os modelos à serem testados.
+3) Crie uma classe de teste para um respectivo modelo, onde os métodos de tal classe serão justamente os métodos que serão utilizados para realizar os testes naquele módulo.
+~~~
+class Model<nome_da_model>TestCase(TestCase):
+    def <teste_específico_x> (self): 
+        ...
+~~~ 
+
+- Identificando se o teste funcionou
+
+À título de exemplo, foi criado um método de testmodel que sempre falha. Para verificar se o teste funcionou ou não, faça o seguinte no terminal: 
+
+> python manage.py test
+
+Esse comando irá apontar quais testes passaram (.) e quais testes falharam (F).
+
+### Testando um model 
+
+Crie os testes dos modelos no arquivo "test_models.py".
+
+1) Crie a classe de teste do modelo:
+2) Dentro da classe, crie uma função de setup, a qual servirar para preparar o ambiente de testes. 
+
+Para este projeto, o cenário de testes precisa contemplar testes referentes aos atributos do modelo de estudante: nome, email, cpf, etc.
+
+~~~
+class ModelEstudanteTestCase(TestCase):
+    # criando o ambiente de testes 
+    def setUp(self):
+        #criando um objeto baseado no modelo estudante
+        self.estudante = Estudante.objects.create(
+            #atributos vindos do modelo estudante
+            nome = 'Teste de modelo',
+            email = 'testedemodelo@gmail.com',
+            cpf = '95197262095',
+            data_nascimento = '2023-02-02',
+            celular = '84 99999-9999'
+        )
+~~~
+
+Vale salientar que, para a realização dos testes, será criado um banco de dados próprio para que as informações do banco de dados da aplicação não sejam alteradas durante a execução dos testes. 
+
+3) Uma vez criado o setup para a model de estudante, crie o método específico. Para o projeto, será um teste para verificar se os atributos corretos.
+
+~~~
+    def test_verifica_atributos_de_estudantes(self):
+        #documentando de forma isolada com a docstring
+        '''Teste que verifica os atributos do modelo de estudante'''
+        #comparando valores armazenados com os valores à serem criados como exemplo acima
+        self.assertEqual(self.estudante.nome, 'Teste de Modelo')
+        self.assertEqual(self.estudante.email, 'testedemodelo@gmail.com')
+        self.assertEqual(self.estudante.cpf, '95197262095')
+        self.assertEqual(self.estudante.data_nascimento, '2023-02-02')
+        self.assertEqual(self.estudante.celular, '84 99999-9999')
+~~~
+
+Vale mencionar que foram realizados testes do mesmo tipo para os modelos de curso e matrícula.
+
+### Testando um serializer
+
+O intuito dos testes nos serializers será para verificar os campos que estão sendo serializados tal como os conteúdos relacionados a cada campo. 
+
+1) Crie um arquivo de testes para serializers: "test_serializers.py".
+2) Dentro de "test_serializers.py", importe o módulo de testes do django, juntamente com os serializers a serem testados e seus respectivos modelos.
+3) Crie uma classe para os testes do serializer baseado na model estudante e, dentro dela, crie a função de setup:
+~~~
+class SerializerEstudanteTestCase(TestCase):
+    def setUp(self):
+        #OBS: não precisa criar um novo obj para estudante, basta apenas instânciar o quem do teste da model de estudante
+        self.estudante = Estudante(
+            nome = 'Teste de Modelo',
+            email = 'testedemodelo@gmail.com',
+            cpf = '95197262095',
+            data_nascimento = '2023-02-02',
+            celular = '84 99999-9999'
+        )
+        #informe qual é o serializer que será aplicado o teste 
+        self.serializer_estudante = EstudanteSerializer(instance= self.estudante)
+~~~
+
+4) Aplique os testes. Para o projeto, serão aplicados os dois testes já mencionados acima: 
+
+~~~
+    def teste_verifica_campos_serializados_de_estudantes(self):
+        '''Teste que verifica os campos que estão sendo serializados de estudante'''
+        #capturando os dados dos campos serializados  
+        dados = self.serializer_estudante.data
+        #capturando os campos (keys) com o objeto de estudante criado
+        self.assertEqual(set(dados.keys()), set(['id','nome','email','cpf','data_nascimento','celular']))
+    
+    def teste_verifica_conteudo_dos_campos_serializados_de_estudantes(self):
+        '''Teste que verifica o conteúdo dos campos que estão sendo serializados de estudante'''
+        #capturando os dados dos campos serializados 
+        dados = self.serializer_estudante.data 
+        #capturando o conteúdo campos com o objeto de estudante criado
+        self.assertEqual(dados['nome'], self.estudante.nome)
+        self.assertEqual(dados['email'], self.estudante.email)
+        self.assertEqual(dados['cpf'], self.estudante.cpf)
+        self.assertEqual(dados['data_nascimento'], self.estudante.data_nascimento)
+        self.assertEqual(dados['celular'], self.estudante.celular)
+~~~
+
+Vale mencionar que foram realizados testes do mesmo tipo para os serializers de curso e matrícula.
+
 ## Testes de autenticação 
 
 ## Testes de requisição 
