@@ -38,7 +38,7 @@ class ModelCursoTestCase(TestCase):
 class ModelMatriculaTestCase(TestCase):
     def setUp(self):
         
-        #criando obj de estudante da matrícula
+        #criando obj de estudante-teste para a matrícula
         self.estudante_matricula = Estudante.objects.create(
             nome = 'Teste de Modelo Matricula',
             email = 'testedemodelo@gmail.com',
@@ -47,7 +47,7 @@ class ModelMatriculaTestCase(TestCase):
             celular = '84 99999-9999'
         )
 
-        #criando o objeto de curso da matricula
+        #criando o objeto de curso-teste da matricula
         self.curso_matricula = Curso.objects.create(
             codigo = 'ABCD123',
             descricao = 'Uma breve descrição do curso',

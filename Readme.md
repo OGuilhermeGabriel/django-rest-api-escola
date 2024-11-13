@@ -1281,6 +1281,8 @@ A fim de criar vários cenários de testes para várias possibilidades, torna-se
 
 ### Trabalhando com teste unitário em Django
 
+Foi utilizado o módulo de "testecase" para a criação dos testes unitários. Independentemente se o teste fosse aplicado sobre um modelo ou sobre um serializador. 
+
 - Exemplificando um teste qualquer 
 
 1) Crie um novo arquivo na pastas "tests", chamado "test_models.py", feito para os testes para as models do projeto. 
@@ -1313,7 +1315,7 @@ Para este projeto, o cenário de testes precisa contemplar testes referentes aos
 class ModelEstudanteTestCase(TestCase):
     # criando o ambiente de testes 
     def setUp(self):
-        #criando um objeto baseado no modelo estudante
+        #criando um objeto baseado no modelo estudante -> criando um estudante-teste
         self.estudante = Estudante.objects.create(
             #atributos vindos do modelo estudante
             nome = 'Teste de modelo',
@@ -1390,6 +1392,96 @@ Vale mencionar que foram realizados testes do mesmo tipo para os serializers de 
 
 ## Testes de autenticação 
 
+Agora será necessário aplicar testes de aplicação, para evitar de acontecer o que ocorreu no exemplo envolvendo o thunderclient, onde a depender do estado de autenticação do usuário (estar logado ou não) o "responsecode" mudava. Ou seja, sempre que tentava-se testar os dois cenários (usuário logado ou deslogado), estava dando conflito. Nesse sentido, o teste de autenticação será feito tendo como base a criação de um script, de modo que seja possível testar os cenários simultaneamente.
+
+Para o projeto, serão realizados testes de autenticação do usuário com as credenciais corretas e incorretas, por meio do "username" e da senha. Também serão realizados testes de autenticação referentes à requisições GET autorizadas e não autorizadas para a rota de estudantes. 
+
+### Criando testes de autenticação
+
+Os testes criados abaixo são considerados como testes unitários pois o seu respectivo cenário de testes contempla apenas uma parte isolada do código, especificamente, referente apenas à autenticação do usuário.   
+
+1) Dentro da pasta de testes, crie um arquivo de teste de autenticação: "test_authentication.py".
+
+2) Importe os models de autenticação, o "testcase" para a API e o "authenticate"
+
+3) Crie um classe para a autenticação do usuário juntamente com o "setUp", responsável por configurar o ambiente de testes para tal autenticação e onde será criado um superusuário que será utilizado para os testes de autenticação.
+
+4) Crie os testes. (Os testes a serem criados para o projeto, já foram mencionados no começo do tópico)
+
+Procedimento similar aos outros testes: o teste será basicamente um método dentro da classe de autenticação do usuário. Estes que, por sua vez, poderão ser documentados por meio de docstrings. Como exemplo, eis aqui um dos: 
+
+~~~
+    def test_autenticacao_user_com_credenciais_corretas(self):
+        '''Teste que verifica a autenticação de um user com as credenciais corretas'''
+        #autenticando o usuário 
+        usuario = authenticate(username= 'admin', password= 'admin')
+        #verificando se a autenticação deu certo ou não:
+        #o dado não pode ser vazio e o no usuário será aplicada a condição de autenticado
+        self.assertTrue((usuario is not None) and usuario.is_authenticated) 
+~~~
+
+5) Confira os testes utilizando: 
+> python manage.py test 
+
+### Testes de autenticação na requisição GET 
+
+A abordagem para aplicar os testes de requisição será um pouco diferente pelo fato de que agora, estes testes envolverão dois ou mais pontos do sistema à serem integrados, sendo agora necessário utilizar testes de integração.
+
+Como agora, as requisições GET para estudantes precisam ser testadas, é preciso capturar a url de estudantes. Isso acontecerá utilizando o "basename" de tal url da seguinte forma.
+
+1) Importe do "django urls" o "reverse", e do "drf", o "status".
+
+2) Adicione na função de setup a url, capturando os dados dela.
+
+~~~
+self.url = reverse('<basename_de_estudantes>-list')
+~~~
+
+Obs: o "-list" serve para capturar a rota que faz lista todas as informações dos estudantes. Ou seja, a url de estudante que está sendo capturada é capaz apenas de ler/listar as informações contidas nela. 
+
+3) Crie o teste para fazer a requisição da url.
+~~~
+    def test_requisicao_get_autorizada(self):
+        '''Teste que verifica uma requisição GET autorizada'''
+        #a rota "url" precisa ser autenticada... forçando a autenticação abaixo
+        self.client.force_authenticate(self.usuario)
+        #capturando uma variável "response" e simulando a requisição
+        response = self.client.get(self.url)
+        #comparando o número da response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+~~~ 
+
+### Autenticando os testes de rotas 
+
+Agora serão implementados os testes da API, referentes as rotas de estudantes, cursos e matrículas. Onde em cada uma dessas rotas, serão testadas as requisições get, post, put e delete. Não estamos mais trabalhando com testes de autenticação e, por conta disso, a requisição precisa ser autorizada.
+
+1) Dentro da pasta de testes, crie um arquivo de testes para cada rota.
+
+Os próximos passos serão feitos tendo como base o ambiente de testes para a rota de estudantes. A aplicação dos testes nas demais rotas foi feita de forma análoga.
+
+2) Importe as bibliotecas necessárias: User, APITestCase, reverse e status
+3) Crie a classe de casos de teste (testcase) para a rota de estudantes, juntamente com o ambiente de testes definido por setUp.
+
+~~~
+class EstudantesTestCase(APITestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_superuser(username='admin', password= 'admin')
+        self.url = reverse('Estudantes-list')
+        #force a autenticação já no ambiente de teste definido por "setUp"
+        self.client.force_authentication(user= self.usuario)
+~~~
+
+Tendo os ambientes para testes autenticados, agora serão realizados os testes de requisição get, post, put e delete.
+
 ## Testes de requisição 
+
+### Testando requisição GET
+
+
+### Testando requisição GET por ID e POST
+
+
+### Testando requisição PUT e DELETE
+
 
 ## Trabalhando com Fixtures 
