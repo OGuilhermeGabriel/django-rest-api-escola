@@ -1453,7 +1453,7 @@ Obs: o "-list" serve para capturar a rota que faz lista todas as informações d
 
 ### Autenticando os testes de rotas 
 
-Agora serão implementados os testes da API, referentes as rotas de estudantes, cursos e matrículas. Onde em cada uma dessas rotas, serão testadas as requisições get, post, put e delete. Não estamos mais trabalhando com testes de autenticação e, por conta disso, a requisição precisa ser autorizada.
+Antes de implementar os testes de API, partir do pressuposto de que todas as rotas já estão autenticadas, para isso:
 
 1) Dentro da pasta de testes, crie um arquivo de testes para cada rota.
 
@@ -1468,20 +1468,100 @@ class EstudantesTestCase(APITestCase):
         self.usuario = User.objects.create_superuser(username='admin', password= 'admin')
         self.url = reverse('Estudantes-list')
         #force a autenticação já no ambiente de teste definido por "setUp"
-        self.client.force_authentication(user= self.usuario)
+        self.client.force_authenticate(user= self.usuario)
 ~~~
 
 Tendo os ambientes para testes autenticados, agora serão realizados os testes de requisição get, post, put e delete.
 
 ## Testes de requisição 
 
+Agora serão implementados os testes da API, referentes as rotas de estudantes, cursos e matrículas. Onde em cada uma dessas rotas, serão testadas as requisições get, post, put e delete. Não estamos mais trabalhando com testes de autenticação e, por conta disso, a requisição precisava ser autorizada.
+
+Vale salientar que estes testes também foram implementados para as rotas de cursos e matriculas. 
+
 ### Testando requisição GET
 
+A título de exemplo, o passo à passo fará os testes aplicados especificamente às requisições referentes a rota de estudantes.
 
-### Testando requisição GET por ID e POST
+1) Crie objetos de estudantes baseados no seu respectivo modelo para aplicar nos testes
 
+Para isso, importe a model de estudante e prepare o ambiente de testes (setup) criando lá 2 estudantes:
 
-### Testando requisição PUT e DELETE
+~~~
+        #exemplo = criando estudante 01 
+        self.estudante_01 = Estudante.objects.create(
+            nome = 'Teste estudante UM',
+            email = 'testeestudante01@gmail.com',
+            cpf = '33989124005',
+            data_nascimento = '2024-01-02',
+            celular = '84 99999-9999',
+        )
+~~~
 
+2) Crie o teste 
+
+Para o projeto, foi criado um teste de requisição get para listar os estudantes
+
+~~~
+    def test_requisicao_get_para_listar_estudantes(self):
+        '''Teste de requisição GET'''
+        #puxe o código de response para capturar a informação dos estudantes do GET    
+        response = self.client.get(self.url) #(/estudantes/)
+        #comparando o statuscode recebido do teste
+        self.assertEqual(response.status_code,status.HTTP_200_OK)
+~~~
+
+Obs: Esta requisição lista todos os estudantes
+
+3) Verifique se o teste foi bem sucedido utilizando: 
+
+> python manage.py test 
+
+### Testando requisição POST
+
+~~~
+    def test_requisicao_post_para_criar_um_estudante(self):
+        """Teste de requisição POST para um estudante"""
+        dados = {
+            'nome':'teste',
+            'email':'teste@gmail.com',
+            'cpf':'82271917034',
+            'data_nascimento':'2003-05-04',
+            'celular':'11 99999-9999'
+        }
+        response = self.client.post(self.url,data=dados)
+        self.assertEqual(response.status_code,status.HTTP_201_CREATED)
+~~~
+
+Os testes de requisições são bastantes similares uns com os outros. Nesse caso, o "response" irá receber um método post o qual irá pegar a base de dados necessárias para criar um estudante. Dessa forma, um conjunto de dados fictícios para testes foi criado para implementar o teste. Outra mudança foi referente à comparação do codigo "response" o qual agora é comparado com o status code http 201.
+
+Para o caso da matrícula, será necessário capturar tanto o estudante quanto o curso para criar a matricula por meio da "primary key" (pk), a qual representa o id respectivo do estudante e do curso.
+
+### Testando requisição PUT
+~~~
+    def test_requisicao_put_para_atualizar_um_estudante(self):
+        """Teste de requisição PUT para um estudante"""
+        dados = {
+            'nome':'teste',
+            'email':'testeput@gmail.com',
+            'cpf':'42370866071',
+            'data_nascimento':'2003-05-09',
+            'celular':'11 88888-6666'
+        }
+        response = self.client.put(f'{self.url}1/',data=dados)
+        self.assertEqual(response.status_code,status.HTTP_200_OK)
+~~~
+
+Dada uma instância já existente, compare o "status code" do response associado à requisição PUT feita ao código response OK.
+
+### Testando requisição DELETE
+~~~
+    def test_requisicao_delete_um_estudante(self):
+        """Teste de requisição DELETE um estudante"""
+        response = self.client.delete(f'{self.url}2/')#/estudantes/2/ que eu quero deletar
+        self.assertEqual(response.status_code,status.HTTP_204_NO_CONTENT)
+~~~
+
+Para testar se estava deletando a instância, escolhi a instância de estudante_2 para ser deletada. Para o teste da requisição da matrícula, será necessário trocar a comparação do status code para 405.
 
 ## Trabalhando com Fixtures 
