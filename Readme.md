@@ -1565,3 +1565,88 @@ Dada uma instância já existente, compare o "status code" do response associado
 Para testar se estava deletando a instância, escolhi a instância de estudante_2 para ser deletada. Para o teste da requisição da matrícula, será necessário trocar a comparação do status code para 405.
 
 ## Trabalhando com Fixtures 
+
+Durante a criação e aplicação dos testes para o projeto, foram utilizados dados fictícios criados para os diversos cenários de testes. Dependendo da escalabilidade do projeto, os testes ficarão cada vez mais extensos e maçantes de serem escritos e, além disso, haverão cenários em que os dados a serem testados precisam ser os mais condizentes possível com relação aos dados reais. 
+
+Nesse sentido serão utilizados fixtures para capturar as informações do banco de dados e passar pro ambiente de teste sem afetar a aplicação pois estes arquivos armazenam os conteúdos serializados do banco de dados da aplicação. 
+
+- dumpdata
+
+
+Este comando será responsável por capturar a colação de dados do banco de dados da aplicação e serializar eles para um arquivo de formato escolhido (um arquivo json, por exemplo). Este arquivo é chamado de Fixture. 
+
+- loaddata
+> python manage.py loaddata
+
+Faz o processo oposto. Os dados presentes em uma certa Fixture serão implementados no banco de dados do projeto. 
+
+### Testando Fixtures: Dumpdata e Carregando Fixtures 
+
+- Usando o dumpdata
+
+> python manage.py dumpdata > prototipo_banco.json
+
+Criará um arquivo com os dados (nesse caso, no formato json) que servirá como um protótipo do banco de dados original. Lembre-se de formatar o documento.
+
+Nesse documento, pode-se encontrar informações referentes aos estudantes, cursos, matrículas e até mesmos os usuários cadastrados na aplicação. Dessa forma, é possível coletar estes dados e aplicar nos testes já construídos. 
+
+- Carregando as fixtures 
+
+1) Importe o testcase para criar o ambiente de testes e as models de estudante e curso para capturar as informações.
+
+2) Crie a classe de testcase e, dentro dela, carregue o arquivo de fixtures:
+~~~
+class FixturesTestCase(TestCase):
+    #carregando o arquivo fixture
+    fixtures = ['escola/fixtures/prototipo_banco.json']
+~~~
+
+Vale salientar que, para deixar mais organizado, criei uma pasta dedicada às fixtures.
+
+3) Crie o método/teste para carregar as fixtures
+~~~
+    def test_carregamento_da_fixtures(self):
+        '''Teste que verifica o carregamento da fixtures'''
+        #capturando as informações da fixtures -> ex: cpf da estudante Lorena Martins
+        estudante = Estudante.objects.get(cpf='66196939033')
+        #capturando as informações da fixtures -> ex: código do curso "como ganhar dinheiro"
+        curso = Curso.objects.get(pk=1) 
+        #conferindo celular do estudante
+        self.assertEqual(estudante.celular, '13 99247-9220') 
+        #conferindo o código do curso
+        self.assertEqual(curso.codigo,'como ganhar dinheiro') 
+~~~
+
+4) Confira se está tudo ok aplicando: 
+> python manage.py test
+
+Obs: Lembre-se que a fixture criada precisa ter sua codificação em utf-8
+
+### Adicionando Fixtures nos testes 
+
+Nesse momento em diante, ao invés de criar uma instância-teste de estudante/curso/matrícula, basta apenas utilizar os dados oriundos da fixture criada. 
+
+Para o exemplo abaixo, adicionei as fixtures nos testes de estudantes mas voltou a dizer que elas serão implementadas nos cursos e nas matrículas. 
+
+1) No começo da classe de testcase, capture o banco de dados inserido na variável de feature.  
+~~~
+class EstudantesTestCase(APITestCase):
+    fixtures = ['escola/fixtures/prototipo_banco.json']
+~~~
+2) Ao invés de criar o superusuário, capture um já existente por meio de um get 
+~~~
+        #self.usuario = User.objects.create_superuser(username='admin', password= 'admin')
+        self.usuario = User.objects.get(username= 'gui') #ATUAL 
+~~~
+3) Ao invés de criar os estudantes-teste, capture um já existente por meio das primary-keys.
+~~~
+        #criando estudante 01 
+        #self.estudante_01 = Estudante.objects.create(
+            #nome = 'Teste estudante UM',
+            #email = 'testeestudante01@gmail.com',
+            #cpf = '33989124005',
+            #data_nascimento = '2024-01-02',
+            #celular = '84 99999-9999'
+        #)
+        self.estudante_01 = Estudante.objects.get(pk=1) #ATUAL
+~~~
