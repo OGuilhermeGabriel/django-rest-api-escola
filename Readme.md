@@ -192,6 +192,8 @@ Nesse sentido vem os serializers, que são componentes responsáveis por convert
 
 ![serializers_geral](/readme_assets/serializers_geral.jpg)
 
+Fonte: https://www.alura.com.br/
+
 Obs: As flechas rosas indicam um request (uma requisição) e as flechas brancas indicam um response (uma resposta).
 
 Note que o serializer fica entre as views e as models. Ou seja, as respostas vindas por contas das requisições que passam pelas models, primeiramente passarão pelos serializers para converter o objeto complexo justamente para um datatype apropriado para que a view consiga interpretar os dados.
@@ -199,6 +201,8 @@ Note que o serializer fica entre as views e as models. Ou seja, as respostas vin
 #### Serializer, Models, Database - fluxo de dados especifico
 
 ![serializers_database](/readme_assets/serializers_model_database.jpg)
+
+Fonte: https://www.alura.com.br/
 
 Como já mencionado, haverá uma comunicação entre os models e o database por meio do ORM, onde o models sempre estarão passando um dado do tipo queryset(instância do modelo ou objeto complexo) ou que eles enviam ou que eles recebem do banco de dados.
 
